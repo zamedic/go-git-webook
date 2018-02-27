@@ -1,0 +1,53 @@
+#!/bin/sh
+# Copyright 2012 The Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# git gofmt pre-commit hook
+#
+# To use, store as .git/hooks/pre-commit inside your repository and make sure
+# it has execute permissions.
+#
+# This script does not handle file names that contain spaces.
+echo "Running Build..."
+go build ./... 2>&1
+if [ $? -ne 0 ]
+then
+	echo "Failed to build project. Please check the output of"
+	echo "go build or run commit with --no-verify if you know"
+	echo "what you are doing."
+	exit 1
+fi
+
+echo "Running tests..."
+go test ./...  2>&1
+if [ $? -ne 0 ]
+then
+	echo "Failed to run tests. Please check the output of"
+	echo "go test or run commit with --no-verify if you know"
+	echo "what you are doing."
+	exit 1
+fi
+
+echo "Running go-fmt..."
+go fmt ./...  2>&1
+if [ $? -ne 0 ]
+then
+	echo "Failed to run go fmt. This shouldn't happen. Please"
+	echo "check the output of the command to see what's wrong"
+	echo "or run commit with --no-verify if you know what you"
+	echo "are doing."
+
+	exit 1
+fi
+
+echo "Running go-vet..."
+go vet ./...  2>&1
+if [ $? -ne 0 ]
+then
+	echo "go vet has detected potential issues in your project."
+	echo "Please check its output or run commit with --no-verify"
+	echo "if you know what you are doing."
+	exit 1
+fi
+
