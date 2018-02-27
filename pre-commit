@@ -29,15 +29,18 @@ then
 	exit 1
 fi
 
-echo "Running go-fmt..."
-go fmt ./...  2>&1
-if [ $? -ne 0 ]
-then
-	echo "Failed to run go fmt. This shouldn't happen. Please"
-	echo "check the output of the command to see what's wrong"
-	echo "or run commit with --no-verify if you know what you"
-	echo "are doing."
+gofiles=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$')
+[ -z "$gofiles" ] && exit 0
 
+unformatted=$(gofmt -l $gofiles)
+[ -z "$unformatted" ] && exit 0
+
+# Some files are not gofmt'd. Print message and fail.
+echo >&2 "Go files must be formatted with gofmt. Please run:"
+for fn in $unformatted; do
+	echo >&2 "  gofmt -w $PWD/$fn"
+done
+if  [ "${#unformatted[@]}" -gt "0" ]; then
 	exit 1
 fi
 
@@ -50,4 +53,3 @@ then
 	echo "if you know what you are doing."
 	exit 1
 fi
-
